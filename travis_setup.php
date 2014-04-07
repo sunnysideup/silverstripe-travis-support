@@ -87,10 +87,6 @@ if(isset($frameworkPackageInfo['package']['versions'][$coreBranchComposer]['extr
 // Print out some environment information.
 printf("Environment:\n");
 printf("  * MySQL:      %s\n", trim(`mysql --version`));
-printf("  * PostgreSQL: %s\n", trim(`pg_config --version`));
-printf("  * SQLite:     %s\n\n", trim(`sqlite3 -version`));
-printf("  * PHP:     %s\n\n", trim(`php --version`));
-printf("  * PHPUnit:     %s\n\n", trim(`phpunit --version`));
 
 // Set up Github API token for higher rate limits (optional)
 // See http://blog.simplytestable.com/creating-and-using-a-github-oauth-token-with-travis-and-composer/
@@ -122,11 +118,6 @@ $package = array_replace_recursive($package, array(
 	'dist' => array(
 		'type' => 'tar',
 		'url' => "file://$parent/$moduleName.tar"
-	),
-	'extra' => array(
-		'branch-alias' => array(
-			'dev-' . $moduleBranch => $coreBranchComposer
-		)
 	)
 ));
 
@@ -136,11 +127,6 @@ $composer = array(
 	'require' => array_merge(
 		isset($package['require']) ? $package['require'] : array(),
 		array($package['name'] => $moduleBranchComposer)
-	),
-	// Always include DBs, allow module specific version dependencies though
-	'require-dev' => array_merge(
-		array('silverstripe/postgresql' => '*','silverstripe/sqlite3' => '*'),
-		isset($package['require-dev']) ? $package['require-dev'] : array()
 	),
 	'minimum-stability' => 'dev',
 	'config' => array(
@@ -161,25 +147,6 @@ if(
 	$composer['require'][$package['name']] .= ' as ' . $coreBranchComposer;
 }
 
-// Framework and CMS need special treatment for version dependencies
-if(
-	in_array($package['name'], array('silverstripe/cms', 'silverstripe/framework'))
-	&& $coreBranchComposer != $composer['require'][$package['name']]
-) {
-	// $composer['repositories'][0]['package']['version'] = $coreBranchComposer;
-	$composer['require']['silverstripe/cms'] = $coreBranchComposer;
-}
-
-// Override module dependencies in order to test with specific core branch.
-// This might be older than the latest permitted version based on the module definition.
-// Its up to the module author to declare compatible CORE_RELEASE values in the .travis.yml.
-// Leave dependencies alone if we're testing either of those modules directly.
-if(isset($composer['require']['silverstripe/framework']) && $package['name'] != 'silverstripe/framework') {
-	$composer['require']['silverstripe/framework'] = $coreBranchComposer;
-}
-if(isset($composer['require']['silverstripe/cms']) && $package['name'] != 'silverstripe/cms') {
-	$composer['require']['silverstripe/cms'] = $coreBranchComposer;
-}
 
 // Add theme based on version. Important for Behat testing.
 // TODO Determine dependency based on actual composer.json in silverstripe-installer
