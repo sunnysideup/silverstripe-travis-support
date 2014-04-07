@@ -2,7 +2,6 @@
 define('SS_ENVIRONMENT_TYPE', 'dev');
 
 /* Database connection */
-$db = getenv('DB');
 define('SS_DATABASE_CLASS', 'MySQLDatabase');
 define('SS_DATABASE_USERNAME', 'root'); 
 define('SS_DATABASE_PASSWORD', '');
